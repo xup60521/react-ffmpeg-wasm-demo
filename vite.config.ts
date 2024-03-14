@@ -13,6 +13,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
+  base: "/react-ffmpeg-wasm-demo",
   server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
