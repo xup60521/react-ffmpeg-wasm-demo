@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Settings } from "../Dashboard";
 
 export default function TrimVid({
@@ -8,355 +8,280 @@ export default function TrimVid({
   duration: number;
   setSettings: React.Dispatch<React.SetStateAction<Settings>>;
 }) {
-  const start_hourRef = useRef<HTMLInputElement>(null);
-  const start_minRef = useRef<HTMLInputElement>(null);
-  const start_secRef = useRef<HTMLInputElement>(null);
+  const vid_hour = `${Math.floor(duration / 3600)}`.padStart(2, "0");
+  const vid_min = `${
+    Math.floor(duration / 60) - Number(vid_hour) * 60
+  }`.padStart(2, "0");
+  const vid_sec = `${Math.floor(duration % 60)}`.padStart(2, "0");
 
-  const end_hourRef = useRef<HTMLInputElement>(null);
-  const end_minRef = useRef<HTMLInputElement>(null);
-  const end_secRef = useRef<HTMLInputElement>(null);
+  const [start_hour, set_start_hour] = useState<string>("00");
+  const [start_min, set_start_min] = useState<string>("00");
+  const [start_sec, set_start_sec] = useState<string>("00");
+  const [end_hour, set_end_hour] = useState<string>(vid_hour);
+  const [end_min, set_end_min] = useState<string>(vid_min);
+  const [end_sec, set_end_sec] = useState<string>(vid_sec);
 
-  const vid_hour = `${Math.floor(duration / 3600)}`;
-  const vid_min = `${Math.floor(duration / 60) - Number(vid_hour) * 60}`;
-  const vid_sec = `${Math.floor(duration % 60)}`;
-
-  function updateTime() {
-    setSettings((prev) => {
-      if (
-        !start_hourRef.current ||
-        !start_minRef.current ||
-        !start_secRef.current ||
-        !end_hourRef.current ||
-        !end_minRef.current ||
-        !end_secRef.current
-      ) {
-        return { ...prev };
-      }
-      const from = `${start_hourRef.current.value}:${start_minRef.current.value}:${start_secRef.current.value}`;
-      const to = `${end_hourRef.current.value}:${end_minRef.current.value}:${end_secRef.current.value}`;
-      prev.trim = { from, to };
-      return { ...prev };
-    });
-  }
+  const ref_start_hour = useRef<HTMLInputElement>(null);
+  const ref_start_min = useRef<HTMLInputElement>(null);
+  const ref_start_sec = useRef<HTMLInputElement>(null);
+  const ref_end_hour = useRef<HTMLInputElement>(null);
+  const ref_end_min = useRef<HTMLInputElement>(null);
+  const ref_end_sec = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (end_hourRef.current && end_minRef.current && end_secRef.current) {
-      end_hourRef.current.value = vid_hour.padStart(2, "0");
-      end_minRef.current.value = vid_min.padStart(2, "0");
-      end_secRef.current.value = vid_sec.padStart(2, "0");
+    if (
+      start_hour &&
+      start_min &&
+      start_sec &&
+      end_hour &&
+      end_min &&
+      end_sec
+    ) {
+      setSettings((prev) => {
+        prev.trim = {
+          from: `${start_hour}:${start_min}:${start_sec}`,
+          to: `${end_hour}:${end_min}:${end_sec}`,
+        };
+        return {...prev};
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    start_hour,
+    start_min,
+    start_sec,
+    end_hour,
+    end_min,
+    end_sec,
+    setSettings,
+  ]);
 
   return (
     <div className="w-full flex flex-col">
       <div className="w-full flex items-center gap-2">
         <div className="flex items-center">
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={start_hour}
+            onFocus={() => {
+              ref_start_hour.current?.select();
+            }}
+            onChange={(e) => set_start_hour(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_start_hour("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_start_hour(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                start_minRef.current?.focus();
+                ref_start_min.current?.focus();
               }
             }}
-            onFocus={() => {
-              start_hourRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                start_hourRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (start_hourRef.current.value.length > 2) {
-                start_hourRef.current.value = start_hourRef.current.value.slice(
-                  0,
-                  2
-                );
-                updateTime();
-                return;
-              }
-              if (start_hourRef.current.value.length < 2) {
-                start_hourRef.current.value =
-                  start_hourRef.current.value.padStart(2, "0");
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={start_hourRef}
+            ref={ref_start_hour}
           />
           <span className="font-bold text-lg w-2 text-white h-full flex items-center justify-center">
             :
           </span>
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={start_min}
+            onFocus={() => {
+              ref_start_min.current?.select();
+            }}
+            onChange={(e) => set_start_min(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_start_min("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_start_min(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                start_secRef.current?.focus();
+                ref_start_sec.current?.focus();
               }
             }}
-            onFocus={() => {
-              start_minRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                start_minRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (start_minRef.current.value.length > 2) {
-                start_minRef.current.value = start_minRef.current.value.slice(
-                  0,
-                  2
-                );
-                updateTime();
-                return;
-              }
-              if (start_minRef.current.value.length < 2) {
-                start_minRef.current.value =
-                  start_minRef.current.value.padStart(2, "0");
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={start_minRef}
+            ref={ref_start_min}
           />
           <span className="font-bold text-lg w-2 text-white h-full flex items-center justify-center">
             :
           </span>
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={start_sec}
+            onFocus={() => {
+              ref_start_sec.current?.select();
+            }}
+            onChange={(e) => set_start_sec(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_start_sec("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_start_sec(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                end_hourRef.current?.focus();
+                ref_end_hour.current?.focus();
               }
             }}
-            onFocus={() => {
-              start_secRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                start_secRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (start_secRef.current.value.length > 2) {
-                start_secRef.current.value = start_secRef.current.value.slice(
-                  0,
-                  2
-                );
-                updateTime();
-                return;
-              }
-              if (start_secRef.current.value.length < 2) {
-                start_secRef.current.value =
-                  start_secRef.current.value.padStart(2, "0");
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={start_secRef}
+            ref={ref_start_sec}
           />
         </div>
-        <div className="flex-grow border-2 rounded-full border-white " />
+        <TrimVideoTimeline
+          start_hour={start_hour}
+          start_min={start_min}
+          start_sec={start_sec}
+          end_hour={end_hour}
+          end_min={end_min}
+          end_sec={end_sec}
+          duration={duration}
+        />
         <div className="flex items-center">
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={end_hour}
+            onFocus={() => {
+              ref_end_hour.current?.select();
+            }}
+            onChange={(e) => set_end_hour(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_end_hour("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_end_hour(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                end_minRef.current?.focus();
+                ref_end_min.current?.focus();
               }
             }}
-            onFocus={() => {
-              end_hourRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                end_hourRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (end_hourRef.current.value.length > 2) {
-                end_hourRef.current.value = end_hourRef.current.value.slice(
-                  0,
-                  2
-                );
-                updateTime();
-                return;
-              }
-              if (end_hourRef.current.value.length < 2) {
-                end_hourRef.current.value = end_hourRef.current.value.padStart(
-                  2,
-                  "0"
-                );
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={end_hourRef}
+            ref={ref_end_hour}
           />
           <span className="font-bold text-lg w-2 text-white h-full flex items-center justify-center">
             :
           </span>
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={end_min}
+            onFocus={() => {
+              ref_end_min.current?.select();
+            }}
+            onChange={(e) => set_end_min(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_end_min("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_end_min(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                end_secRef.current?.focus();
+                ref_end_sec.current?.focus();
               }
             }}
-            onFocus={() => {
-              end_minRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                end_minRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (end_minRef.current.value.length > 2) {
-                end_minRef.current.value = end_minRef.current.value.slice(0, 2);
-                updateTime();
-                return;
-              }
-              if (end_minRef.current.value.length < 2) {
-                end_minRef.current.value = end_minRef.current.value.padStart(
-                  2,
-                  "0"
-                );
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={end_minRef}
+            ref={ref_end_min}
           />
           <span className="font-bold text-lg w-2 text-white h-full flex items-center justify-center">
             :
           </span>
           <input
+            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
+            value={end_sec}
+            onFocus={() => {
+              ref_end_sec.current?.select();
+            }}
+            onChange={(e) => set_end_sec(e.target.value)}
+            onBlur={(e) => {
+              const text = e.target.value;
+              if (Number.isNaN(Number(text)) || text === "") {
+                set_end_sec("00");
+                return;
+              }
+              if (text.length < 2) {
+                set_end_sec(text.padStart(2, "0"));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                updateTime();
-                end_secRef.current?.blur();
+                ref_end_sec.current?.blur();
               }
             }}
-            onFocus={() => {
-              end_secRef.current?.select();
-            }}
-            onBlur={(e) => {
-              if (
-                !start_hourRef.current ||
-                !start_minRef.current ||
-                !start_secRef.current ||
-                !end_hourRef.current ||
-                !end_minRef.current ||
-                !end_secRef.current
-              ) {
-                return;
-              }
-              if (
-                Number.isNaN(Number(e.target.value)) ||
-                e.target.value === ""
-              ) {
-                end_secRef.current.value = "00";
-                updateTime();
-                return;
-              }
-              if (end_secRef.current.value.length > 2) {
-                end_secRef.current.value = end_secRef.current.value.slice(0, 2);
-                updateTime();
-                return;
-              }
-              if (end_secRef.current.value.length < 2) {
-                end_secRef.current.value = end_secRef.current.value.padStart(
-                  2,
-                  "0"
-                );
-                updateTime();
-                return;
-              }
-            }}
-            className="w-8 min-w-0 rounded p-1 text-center bg-transparent border-[1px] text-sm border-white text-white"
-            defaultValue={"00"}
-            ref={end_secRef}
+            ref={ref_end_sec}
           />
         </div>
       </div>
     </div>
   );
 }
+
+const TrimVideoTimeline = ({
+  start_hour,
+  start_min,
+  start_sec,
+  end_hour,
+  end_min,
+  end_sec,
+  duration,
+}: {
+  start_hour: string;
+  start_min: string;
+  start_sec: string;
+  end_hour: string;
+  end_min: string;
+  end_sec: string;
+  duration: number;
+}) => {
+  const start_time =
+    3600 * Number(start_hour) + 60 * Number(start_min) + Number(start_sec);
+  const end_time =
+    3600 * Number(end_hour) + 60 * Number(end_min) + Number(end_sec);
+  const trim_duration = end_time - start_time;
+  const percent = `${(trim_duration / duration) * 100}%`;
+  const x_offset = (duration / trim_duration) * 100 * (start_time / duration);
+
+  return (
+    <div className="flex-grow relative h-1">
+      <div className="flex-grow relative w-full h-1 bg-gray-400 overflow-x-hidden">
+        <div
+          className="absolute h-1 rounded-full bg-white transition-all w-full"
+          style={{
+            transform: `scaleX(${percent}) translateX(${x_offset}%)`,
+            transformOrigin: "left",
+          }}
+        ></div>
+      </div>
+      <div className="absolute w-full -top-1 flex">
+        <div
+          className="h-1 min-w-0 transition-all max-w-full"
+          style={{ width: `${(start_time / duration) * 100}%` }}
+        ></div>
+        <div className="w-3 h-3 bg-white rounded-full transition-all"></div>
+      </div>
+      <div className="absolute w-full -top-1 flex">
+        <div
+          className="h-1 min-w-0 transition-all max-w-full"
+          style={{ width: `${(end_time / duration) * 100}%` }}
+        ></div>
+        <div className="w-3 h-3 bg-white rounded-full transition-all"></div>
+      </div>
+    </div>
+  );
+};
